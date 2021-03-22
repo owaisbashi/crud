@@ -1,6 +1,7 @@
 from django.shortcuts import render,redirect
 from .models import *
 from .forms import *
+from django.forms import inlineformset_factory
 # Create your views here.
 
 def home(request):
@@ -27,15 +28,19 @@ def products(request):
     products= Product.objects.all()
     return render(request,'accounts/products.html',{'products':products})
 
-def create_order(request):
-    form=OrderForm()
+def create_order(request,pk):
+    OrderFormSet=inlineformset_factory(Customer,Order,fields=('product','status'),extra=10)
+    customer=Customer.objects.get(id=pk)
+    formset=OrderFormSet(queryset=Order.objects.none(), instance=customer)
+
+   
     if request.method=='POST':
-        form=OrderForm(request.POST)
+        formset=OrderFormSet(request.POST,instance=customer)
         print(request.POST)
-        if form.is_valid():
-            form.save()
+        if formset.is_valid():
+            formset.save()
             return redirect ('/')
-    context={'form':form}
+    context={'formset':formset}
 
     return render(request,'accounts/create_order.html',context)
 
